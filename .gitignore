@@ -1,0 +1,4 @@
+# Distributions
+dist/
+*.tgz
+*.egg-info/
