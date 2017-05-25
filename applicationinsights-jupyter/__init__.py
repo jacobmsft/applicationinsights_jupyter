@@ -1,3 +1,0 @@
-def Connect():
-    return "Connected"
-
