@@ -1,2 +1,2 @@
-
-from .jupyter import connect, execute
+from .jupyter import Jupyter
+__all__ = ['Jupyter']
