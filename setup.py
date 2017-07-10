@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='applicationinsights_jupyter',
-    version='0.7',
+    version='0.13',
     description='Easy querying of Application Insights data for Jupyter',
     url='http://github.com/jacobmsft/ApplicationInsights_Jupyter',
     author='Suraj Jacob',

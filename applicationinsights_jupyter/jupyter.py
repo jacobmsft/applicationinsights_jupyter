@@ -17,21 +17,28 @@ class Jupyter:
         None
     """
 
-    baseurl = 'https://api.applicationinsights.io/beta/apps/%s/'
+    baseurl = 'https://api.applicationinsights.io/'
+    appIdPart = 'beta/apps/%s/'
     headers = {'x-api-key': "%s", 'Content-Type': 'application/json'}
     data = '{ "query" : "%s" }'
     appId = ""
     apiKey = ""
+    verify=True
 
-    def __init__(self, appId, apiKey):
+    def __init__(self, appId, apiKey, queryEndpoint=None, verify=True):
         """
         Creates a Application Insights Jupyter object. Takes in Application Insights appId and apiKey
         Args:
             appId (str): AppID (refer https://dev.applicationinsights.io/documentation/overview)
             apiKey (str): ApiKey refer https://dev.applicationinsights.io/documentation/overview)
+            queryEndpoint (str): point to another query endpoint (internal testing)
+            verify (boolean): Verify SSL host name
         """
         self.appId = appId
         self.apiKey = apiKey
+        self.verify = verify
+        if queryEndpoint != None:
+            self.baseurl = queryEndpoint
 
     def getAIData(self, userQuery):
         """Gets Application Insights data for a particular app. The function assumes that the output of the query will be simple metrics/timestamp etc
@@ -45,17 +52,19 @@ class Jupyter:
 
         # hydrate the templates - make local copies first, because jupyter data persists
         baseurl = self.baseurl
+        appIdPart = self.appIdPart
+
         data = copy.copy(self.data)
         headers = copy.copy(self.headers)
         appId = self.appId
         apiKey = self.apiKey
 
-        data = data % userQuery
-        url = self.baseurl % self.appId + "query";
+        data = data % (userQuery)
+        url = self.baseurl + appIdPart % self.appId + "query";
         headers['x-api-key'] = headers['x-api-key'] % apiKey
 
         # make the request and parse response
-        response = requests.post(url, headers=headers, data=data)
+        response = requests.post(url, headers=headers, data=data, verify=self.verify)
         # throw exception if not success
         response.raise_for_status()
 
@@ -79,20 +88,22 @@ class Jupyter:
         """
         # copy to local
         baseurl = self.baseurl
+        appIdPart = self.appIdPart
+
         headers = copy.copy(self.headers)
         appId = self.appId
         apiKey = self.apiKey
         headers['x-api-key'] = headers['x-api-key'] % apiKey
 
         # add the url params if specified
-        url = self.baseurl % self.appId + "metrics/{0}?useMDM=true&clientId=Jupyter".format(metric)
+        url = self.baseurl + appIdPart % self.appId + "metrics/{0}?useMDM=true&clientId=Jupyter".format(metric)
         url += "&timespan={0}/{1}".format(startTime, endTime) if startTime != None and endTime != None else ""
         url += "&interval={0}".format(interval) if interval != None else ""
         url += "&segment={0}".format(segment) if segment != None else ""
         url += "&aggregation={0}".format(aggregation) if aggregation != None else ""
 
         # make the request and parse response
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, verify=self.verify)
         response.raise_for_status()
 
         jsonObj = json.loads(response.text)
@@ -108,11 +119,11 @@ class Jupyter:
         """
         if data == None: return None
         values = []
-        values = map(lambda(x): [x["end"], x[metric]], data)
+        values = map(lambda x: [x["end"], x[metric]], data)
         if segment != None:
-            values = map(lambda(x): x[segment], values)
+            values = map(lambda x: x[segment], values)
         if aggregation != None:
-            values = map(lambda(x): [x[0], x[1][aggregation]], values)
+            values = map(lambda x : [x[0], x[1][aggregation]], values)
 
         return values
 

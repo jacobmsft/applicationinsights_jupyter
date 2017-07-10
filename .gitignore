@@ -2,3 +2,4 @@
 dist/
 *.tgz
 *.egg-info/
+*.pyc
